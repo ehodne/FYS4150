@@ -1,0 +1,307 @@
+\documentclass[10pt,showpacs,preprintnumbers,footinbib,amsmath,amssymb,aps,prl,twocolumn,groupedaddress,superscriptaddress,showkeys]{revtex4-1}
+\usepackage{graphicx}
+\usepackage{dcolumn}
+\usepackage{bm}
+\usepackage[colorlinks=true,urlcolor=blue,citecolor=blue]{hyperref}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{subcaption}
+\usepackage{hyperref}
+
+\newcommand{\pd}[2]{\frac{\partial#1}{\partial #2}}
+\newcommand{\pdd}[2]{\frac{\partial^2#1}{\partial #2^2}}
+\newcommand{\D}{\mathrm d}
+\newcommand{\ang}[1]{\left\langle #1 \right\rangle}
+\newcommand{\intinf}{\int\limits_{-\infty}^{\infty}}
+\newcommand{\brac}[1]{\left[ #1\right] }
+\newcommand{\paran}[1]{\left( #1 \right) }
+\newcommand{\der}[2]{\frac{\mathrm d#1}{\mathrm d #2}}
+\newcommand{\pder}[2]{\frac{\partial#1}{\partial#2}}
+\newcommand{\suml}[2]{\sum\limits_{#1}^{#2}}
+\newcommand{\Exp}[1]{e^{#1}}	%exponential e^{}
+\newcommand{\magnitude}[1]{\times 10^{#1}}	%exponential x10^{}
+\newcommand{\dder}[2]{\frac{\mathrm d^2 #1}{\mathrm d^2 #2}}
+\renewcommand{\d}{\mathrm d}
+\newcommand{\up}{\uparrow}
+\newcommand{\dw}{\downarrow}
+\newcommand{\tvec}[2]{\begin{pmatrix} #1\\#2 \end{pmatrix}}
+\newcommand{\eps}{\epsilon}
+\newcommand{\dV}{\mathrm d V}
+\newcommand{\dP}{\mathrm d P}
+\newcommand{\dS}{\mathrm d S}
+\newcommand{\dT}{\mathrm d T}
+\newcommand{\dN}{\mathrm d N}
+\newcommand{\dU}{\mathrm d U}
+\newcommand{\dH}{\mathrm d H}
+\newcommand{\dG}{\mathrm d G}
+\newcommand{\dF}{\mathrm d F}
+\newcommand{\dPh}{\mathrm d \Phi}
+\newcommand{\ave}[1]{\langle #1\rangle}
+\newcommand{\Z}{\mathcal Z}
+\newcommand{\nfd}{\bar n_{\rm FD}}
+\newcommand{\nbe}{\bar n_{\rm BE}}
+\newcommand{\nbolt}{\bar n_{\rm Boltzm.}}
+\newcommand{\npl}{\bar n_{\rm Planck}}
+
+\begin{document}
+
+
+
+\title[CPP2]{Computational Physics Project 5\\
+\large{Molecular Dynamics}}
+
+\author{Marius B. Pran}
+\affiliation{Institute of Theoretical Astrophysics, University of Oslo}
+\author{Espen Hodne} 
+\affiliation{Institute of Theoretical Astrophysics, University of Oslo}
+\author{Marc K. Pestana}
+\affiliation{Institute of Theoretical Astrophysics, University of Oslo}
+
+
+\begin{abstract}
+a
+\end{abstract}
+
+
+\maketitle
+
+
+
+\section{Introduction}
+In this project we will implement a model called molecular dynamics (MD). Molecular dynamics allows us to study the dynamics of atoms and explore the phase space. The atoms interact through a force given by the negative gradient of a potential energy function. With this force, we can integrate Newton's laws. While exploring the phase space, we will sample statistical properties of the system like energy, temperature, pressure, diffusion constant and so on.
+
+The initial program creates 100 argon atoms
+and places them uniformly inside a cubic box with sides 10
+Angstroms. Each atom is given a velocity according to the
+Maxwell-Boltzmann distribution so that
+\begin{align} 
+P(v_i)\d\mathrm{v}_i = \left(\frac{m}{2\pi k_B
+T}\right)^{1/2} \exp\left(-\frac{m v_i^2}{2k_B T}\right)\d\mathrm{v}_i,
+\end{align} 
+where $m$ is the mass of the atom, $k_B$ is
+Boltzmann's constant and $T$ is the temperature. We recognize this as
+a normal distribution with zero mean and standard deviation $\sigma =
+\sqrt{k_B T/m}$. We recognize this also as the Boltzmann distribution $P(E) \propto \exp{(-\beta E)}$, with $E = 0.5mv^2$.
+The initial program evolves the system in time with no
+forces so that all atoms move in a straight line.
+
+\section{Methods and Algorithms}
+
+The basic method we use in this project is to use a program written by Anders Hafreager to simulate atoms in a box. We set up the particles, either randomly or in a grid, and let the Force (which is strong with this one) work between them. In order to get a clear picture of what is going on, we use the visualizatoin program \textit{Ovito}.1
+
+\subsection*{a}
+
+We start by setting up the MD simulation. We use a program written by Anders Hafreager, and use it to set up 100 particles with a randomized distance between them. These particles are given a velocity with a Maxwell-Boltzmann distribution, and placed within a box.
+
+We run the program for two different cases: once as it is, and once after applying periodic boundary conditions. The periodic boundary conditions makes sure that when a particle reaches the edge of the box, it should exit and then instantly reenter on the opposite side - each wall becomes spatially linked to the opposite wall. We apply the boundary conditions by using the \textit{applyPeriodicBoundaryConditions} function.
+
+There are two main benefits of using this method: first, we do not need to do calculations for particles "bouncing" off the walls of the box. Second, it should give us a picture of how the gas would behave in open space, in a very large gas cloud.
+
+
+\subsection*{b}
+
+The Maxwell-Boltzmann distribution is a probability distribution that is often used to assign velocities to ideal gases, where the particles can move freely and only interact through very brief collisions. This distribution fits very well with observed data, which is why it is often used in simulations and calculations.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.4]{MaxwellBoltzmann.png}
+	\caption{Maxwell Boltzmann velocity distribution for selected noble gases at temperature $T = 298.15\mathrm{K}$. Image from Wikipedia.}
+	\label{fig:5a_MaxBoltz}
+\end{figure}
+
+As we can see in figure \ref{fig:5a_MaxBoltz}, the Maxwell Boltzmann distribution is tilted more in favour of the upper part of the x-axis than the common Gaussian distribution.
+
+However, in our simulation, we use a Gaussian distribution. That means while our simulation may not be as accurate as if we had used the Maxwell-Boltzmann distribution, it is easy to work with and will give very intuitive results.
+
+When this velocity distribution is applied to our system, the whole system gains a momentum and starts moving. We fix this by applying the \textit{removeMomentum} function. This will work by letting our frame of reference move along with the total system momentum, so that in our frame of reference the box will be stationary.
+
+\subsection*{c}
+
+Now that the main methods have been implemented, we want to start doing physics with our simulation. We will start by placing the particles in a face-centered cubic (FCC) lattice.
+
+
+This lattice is a grid consisting of cubes with length $\frac{b}{2}$, where $b$ is the lattice constant. Each cube has four particles. We construct a grid of boxes with particles in the corners $\left(0,0,0  \right)$, $\left(\frac{b}{2}, \frac{b}{2}, 0  \right)$ and $\left( \frac{b}{2}, 0, \frac{b}{2}  \right)$. This makes sure we have a grid of cubes where every corner in the middle of the grid is filled out, without any particle overlap. By applying periodic boundary conditions this should make sure the entire box is filled out with particles at a distance $\frac{b}{2}$ between each other.
+
+
+We use a lattice of $5 \times 5 \times 5$ cubes. This means our simulation works with $500$ particles inside the box. We also set the lattice constant to be $b = 5.26\mathrm{\AA}$.
+
+\subsection*{d}
+
+Now we have a grid of atoms who all have an initial velocity. The next step is to set up the forces that act between them. The force can be found from the potential energy, using the relation
+
+\begin{equation}
+\textbf{F}(r_{i,j}) = -\nabla U(r_{i,j})
+\end{equation}
+
+where $r_{i,j} = | \textbf{r}_i - \textbf{r}_j |$ is the distance between atom $i$ ad $j$. This also means that
+
+\begin{equation}
+F_x(r_{i,j}) = -\pd{U}{r_{i,j}}\pd{r_{i,j}}{x_{i,j}}
+\end{equation}
+
+where similar formulas applies for $F_y$ and $F_z$.
+
+ We use the Lennard-Jones potential, which calculates the energy between two atoms $i$ and $j$, and looks like this:
+
+\begin{equation}
+U(r_{i,j}) = 4\epsilon\left[ \left( \frac{\sigma}{r_{i,j}} \right)^{12} - \left( \frac{\sigma}{r_{i,j}} \right)^6 \right]
+\end{equation}
+
+$\epsilon$ is the depth of the potential well (with dimensions energy), and $\sigma$ is the distance at which the potential is zero.
+
+We can then find the potential energy with the relation
+
+\begin{equation}
+V = \sum_{i > j}U(r_{i,j})
+\end{equation}
+
+For the rest of the project, we will use Argon as our sample gas. That means $\frac{\epsilon}{k_B} = 119.8\mathrm{K}$ and $\sigma = 3.405\mathrm{\AA}$. We also scale our units to so-called MD units, which means that
+
+\begin{align}
+	\text{1 unit of mass } &= 1 \text{ a.m.u} = 1.661\times 10^{-27}\mathrm{kg},\\
+	\text{1 unit of length } &= 1.0 \mathrm{\AA} = 1.0\times 10^{-10}\mathrm{m},\\
+	\text{1 unit of energy } &= 1.651\times 10^{-21}\mathrm{J},\\
+	\text{1 unit of temperature} &= 119.735\mathrm{K}.
+\end{align}
+
+Now that we have the formula, we use the \textit{calculateForces} function in the LennardJones class and the Verlocity Verlet algorithm.
+
+
+
+\subsection*{e}
+
+Now that we have a working molecular cloud, we want to do physics with it. We start by using the LennardJones class to calculate the system's kinetic and potential energy. We have already found the potential energy, so now we want to calculate the kinetic.
+
+Kinetic energy is defined as
+
+\begin{equation}
+E_k = \suml{i = 1}{N_\mathrm{atoms}}\frac{1}{2}m_i v_i^2
+\end{equation}
+
+where $m_i$ and $v_i$ is the mass and velocity of particle $i$, respectively.
+
+With the kinetic energy in place, we can use it to calculate the instantaneous temperature
+
+\begin{equation}
+T = \frac{2}{3}\frac{E_k}{N_\mathrm{atoms}k_B}
+\end{equation}
+
+with the \textit{StatisticsSampler} class.
+
+\subsection*{f}
+
+Fnially, we compute the diffusion constant and use it to measure the melting temperature. We use the Einstein relation that releates the mean square dispacement (MSD) to the diffusion constant:
+
+\begin{equation}
+\langle r^2(t) \rangle = 6Dt
+\end{equation}
+
+where $D$ is the infusion constant and $t$ is time. We calculate MSD with 
+
+\begin{equation}
+r_i^2(t) = | \textbf{r}_i (t) - \textbf{r}_i (0) |^2
+\end{equation}
+
+where $\textbf{r}_i (t)$ is the osition of atom $i$ at time $t$.
+
+We use the \textit{Atom} class to add an initial position for this property. We also update our bondary condition function so that $r_i^2(t)$ is the actual displacement, as if no boundary condition occured.
+
+The problem if we don't do this, is that the force will not work across boundaries, while the particles can cross. That means if a particle crosses a boundary, it will be subject to a massive acceleration from a sudden force that it was not subjected to before. This is a very unphysical phenomenon, and thus we want to avoid it.
+
+When we have the diffusion constant, we use it to find the melting temperature. We know that the diffusion constant will be close to zero, since solid materials do not diffuse much. We first solve the Einstein relation for $D$:
+
+\begin{equation}
+D = \frac{\langle r^2(t)  \rangle}{6t}
+\end{equation}
+
+
+This can be measured numerically. We plot it against temperature $T$ (figure \ref{fig:5f_diff_temp}). This will show us an estimate for the melting temperature, by seeing where the diffusion constant is no longer close to zero.
+
+\section{Results}
+
+\subsection*{a}
+
+No results.
+
+\subsection*{b}
+
+No results.
+
+\subsection*{c}
+
+We find the mass density of our Argon in a solid state to be $1823.2528 \mathrm{g/dm^3}$.
+
+\subsection*{d}
+
+Run for different initial temperatures.
+
+Can you tell if the system is in a solid state just by looking at the system in Ovito?
+
+At what initial temperature is the crystal melting?
+
+\subsection*{e}
+
+What initial temperature $T_i$ is needed to have a system reach a final temperature T?
+
+What is the ratio $T_i/T$?
+
+Determine melting temperature.
+
+Plot random seeds as a function of time.
+
+\subsection*{f}
+
+Determine melting temperature by plotting against the diffusion constant.
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.4]{5f_diff_temp.png}
+	\caption{Diffusion temperature as a function of temperature.}
+	\label{fig:5f_diff_temp}
+\end{figure}
+
+By analyzing figure \ref{fig:5f_diff_temp}, we can see that the melting temperature is...
+
+\section{Conclusions and Discussion}
+
+\subsection*{a}
+
+By having rotational boundary conditions, we can approximate our system to being infinitely large. The principle is that our particles are now copied many times over, and it will be as if we had an infinitely large space filled with particles.
+
+The issue with this approximation is, of course, that even if our space is infinitely large, it still just contains copies of a finite ammount of particles. This means the same particles would affect each other from different sides. This would be the same as if Alice was sitting next to Bob and poke him in both his shoulders, at the same time, with the same hand. We are not simulating an infinite space, we are simulating a closed, infinitely looping space.
+
+This works, however, for the reason that the force falls off very quickly. This means different clusters of atoms should have little effect on one another, and almost no effect on any other clusters others than the closest. This means our simulation, while technically being a looping space, will be an acceptable approximation to an open, infinite space.
+
+\subsection*{b}
+
+No discussion.
+
+\subsection*{c}
+
+We find the mass density of our Argon in a solid state to be $1823.2528 \mathrm{kg/m^3}$.
+
+A quick search on Wikipedia tells us that the mass density of argon should be $1623\mathrm{kg/m^3}$. This means our simulation is within a the same order of magnitude. If we assume that the given numbers are not for a perfect argon crystal. It would then make sense for our simulation density to be a bit higher, since it represents an idealized situation.
+
+\subsection*{d}
+
+Comment results.
+
+\subsection*{e}
+
+The total energy stays constant. This is a good result, and indicates that the system is physically sound. We have energy conservation, as all closed physical systems should have.
+
+We notice that from the first timestep to the second, the kinetic energy and temprature drop a little bit. Why is that?
+
+Well, the way we assign velocities and distances to our systems makes sure the initial potential is the minimum potential, that is, the potential energy is the lowest it can possibly be. That means any movement of the particles will have the potential energy increase from it's initial position. Since total energy is conserved, this means the kinetic energy will go down. Since the temperature of the system scales with kinetic energy, it will decrease as well.
+
+
+\subsection*{f}
+
+\section{Extra Material}
+\begin{thebibliography}{99}
+%\bibitem{nasa} \href{https://ssd.jpl.nasa.gov/horizons.cgi#top}{National Aeronautics and Space Administration}
+%\bibitem{wikipedia} \ref{https://en.wikipedia.org/wiki/Maxwell-Boltzmann_distribution}
+\end{thebibliography}
+
+\end{document}
